@@ -7,6 +7,7 @@ import base64
 from io import BytesIO
 from docx import Document
 from docx.oxml import OxmlElement
+from docx.oxml.ns import qn
 
 def fetch_ics_data(ics_url):
     try:
@@ -92,10 +93,13 @@ def get_table_download_link(df, file_type):
         if tblBorders is None:
             tblBorders = OxmlElement('w:tblBorders')
             tblPr.append(tblBorders)
-        border = OxmlElement('w:bottom')
-        border.set(qn('w:val'), 'single')
-        border.set(qn('w:sz'), '4')  # 1px border size in half-points (4 half-points = 2px)
-        tblBorders.append(border)
+        
+        # Define border properties
+        for border_name in ['top', 'left', 'bottom', 'right', 'insideH', 'insideV']:
+            border = OxmlElement(f'w:{border_name}')
+            border.set(qn('w:val'), 'single')
+            border.set(qn('w:sz'), '4')  # 1px border size in half-points (4 half-points = 2px)
+            tblBorders.append(border)
         
         output = BytesIO()
         doc.save(output)
