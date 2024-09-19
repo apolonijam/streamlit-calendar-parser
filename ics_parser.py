@@ -8,7 +8,7 @@ from io import BytesIO
 from docx import Document
 
 # Password for the app
-PASSWORD = "hlwstpeter25"
+PASSWORD = "your_password_here"
 
 # Default ICS link
 DEFAULT_ICS_URL = "https://outlook.office365.com/owa/calendar/1cd1c906443845f3b6f75a99e0046625@hlw-stpeter.at/eb0bfd4af91541c186aca61ab066659016968059287048739671/calendar.ics"
@@ -46,7 +46,13 @@ def parse_ics_data(calendar_data, start_date, end_date):
             dates_to.append("")  # Leave it empty if the duration is 1 day or less
         
         dates_from.append(event_start.strftime("%d. %m. %Y"))
-        times.append(event_start.strftime("%H:%M"))
+        
+        # Only show time if it’s not 00:00
+        if event_start.time() != datetime.min.time():
+            times.append(event_start.strftime("%H:%M"))
+        else:
+            times.append("")  # Leave empty if time is 00:00
+            
         events.append(event.name)
 
     return dates_from, dates_to, times, events
@@ -57,9 +63,9 @@ def display_table(dates_from, dates_to, times, events):
     st.dataframe(df)
     
     # Add buttons to download the table in different formats
+    st.markdown(get_table_download_link(df, 'docx'), unsafe_allow_html=True)  # Word download as first option
     st.markdown(get_table_download_link(df, 'csv'), unsafe_allow_html=True)
     st.markdown(get_table_download_link(df, 'xlsx'), unsafe_allow_html=True)
-    st.markdown(get_table_download_link(df, 'docx'), unsafe_allow_html=True)
 
 def get_table_download_link(df, file_type):
     if file_type == 'csv':
@@ -108,26 +114,28 @@ def main():
     # Main content of the app
     ics_url = st.text_input("Geben Sie den ICS-Kalenderlink ein:", DEFAULT_ICS_URL)
     
-    # Default date range
-    current_year = datetime.now().year
-    start_date = datetime(current_year, 9, 1)
-    end_date = datetime(current_year + 1, 9, 1)
-    
-    # User inputs for date range
-    st.sidebar.header("Filterdatum")
-    start_date = st.sidebar.date_input("Startdatum", start_date)
-    end_date = st.sidebar.date_input("Enddatum", end_date)
-    
-    # Convert to datetime objects
-    start_date = datetime.combine(start_date, datetime.min.time())
-    end_date = datetime.combine(end_date, datetime.min.time())
-    
-    if ics_url:
-        calendar_data = fetch_ics_data(ics_url)
-        
-        if calendar_data:
-            dates_from, dates_to, times, events = parse_ics_data(calendar_data, start_date, end_date)
-            display_table(dates_from, dates_to, times, events)
+    # Confirmation button for ICS URL
+    if st.button("Kalender laden"):
+        # Default date range
+        current_year = datetime.now().year
+        start_date = datetime(current_year, 9, 1)
+        end_date = datetime(current_year + 1, 9, 1)
+
+        # User inputs for date range
+        st.sidebar.header("Filterdatum")
+        start_date = st.sidebar.date_input("Startdatum", start_date)
+        end_date = st.sidebar.date_input("Enddatum", end_date)
+
+        # Convert to datetime objects
+        start_date = datetime.combine(start_date, datetime.min.time())
+        end_date = datetime.combine(end_date, datetime.min.time())
+
+        if ics_url:
+            calendar_data = fetch_ics_data(ics_url)
+            
+            if calendar_data:
+                dates_from, dates_to, times, events = parse_ics_data(calendar_data, start_date, end_date)
+                display_table(dates_from, dates_to, times, events)
 
 if __name__ == "__main__":
     main()
