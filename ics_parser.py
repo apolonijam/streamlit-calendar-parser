@@ -8,7 +8,7 @@ from io import BytesIO
 from docx import Document
 
 # Password for the app
-PASSWORD = "hlwstpeter25"
+PASSWORD = "your_password_here"
 
 # Default ICS link
 DEFAULT_ICS_URL = "https://outlook.office365.com/owa/calendar/1cd1c906443845f3b6f75a99e0046625@hlw-stpeter.at/eb0bfd4af91541c186aca61ab066659016968059287048739671/calendar.ics"
@@ -24,7 +24,7 @@ def fetch_ics_data(ics_url):
 
 def parse_ics_data(calendar_data, start_date, end_date):
     calendar = Calendar(calendar_data)
-    dates_from, dates_to, times, events = [], [], [], []
+    events_list = []
     
     for event in calendar.events:
         event_start = event.begin.datetime
@@ -40,27 +40,27 @@ def parse_ics_data(calendar_data, start_date, end_date):
             continue  # Skip events outside the specified range
 
         # Determine if the end date should be shown
-        if event_end and (event_end - event_start) > timedelta(days=1):
-            dates_to.append(event_end.strftime("%d. %m. %Y"))
-        else:
-            dates_to.append("")  # Leave it empty if the duration is 1 day or less
-        
-        dates_from.append(event_start.strftime("%d. %m. %Y"))
+        end_date_str = event_end.strftime("%d. %m. %Y") if event_end and (event_end - event_start) > timedelta(days=1) else ""
         
         # Only show time if it’s not 00:00
-        if event_start.time() != datetime.min.time():
-            times.append(event_start.strftime("%H:%M"))
-        else:
-            times.append("")  # Leave empty if time is 00:00
-            
-        events.append(event.name)
+        time_str = event_start.strftime("%H:%M") if event_start.time() != datetime.min.time() else ""
+        
+        events_list.append({
+            'Startdatum': event_start.strftime("%d. %m. %Y"),
+            'Enddatum': end_date_str,
+            'Uhrzeit': time_str,
+            'Ereignis': event.name,
+            'Startdatetime': event_start  # Add for sorting purposes
+        })
 
-    return dates_from, dates_to, times, events
+    # Convert to DataFrame and sort by Startdatetime
+    df = pd.DataFrame(events_list)
+    df = df.sort_values(by='Startdatetime').reset_index(drop=True)
+    
+    return df
 
-def display_table(dates_from, dates_to, times, events):
-    table = {'Startdatum': dates_from, 'Enddatum': dates_to, 'Uhrzeit': times, 'Ereignis': events}
-    df = pd.DataFrame(table)
-    st.dataframe(df)
+def display_table(df):
+    st.dataframe(df[['Startdatum', 'Enddatum', 'Uhrzeit', 'Ereignis']])
     
     # Add buttons to download the table in different formats
     st.markdown(get_table_download_link(df, 'docx'), unsafe_allow_html=True)  # Word download as first option
@@ -135,8 +135,8 @@ def main():
             calendar_data = fetch_ics_data(ics_url)
             
             if calendar_data:
-                dates_from, dates_to, times, events = parse_ics_data(calendar_data, start_date, end_date)
-                display_table(dates_from, dates_to, times, events)
+                df = parse_ics_data(calendar_data, start_date, end_date)
+                display_table(df)
 
 if __name__ == "__main__":
     main()
