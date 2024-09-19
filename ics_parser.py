@@ -3,6 +3,7 @@ from ics import Calendar
 import requests
 import pandas as pd
 from datetime import datetime
+import base64
 
 def fetch_ics_data(ics_url):
     try:
@@ -18,15 +19,18 @@ def parse_ics_data(calendar_data, start_date, end_date):
     dates_from, dates_to, times, events = [], [], [], []
     
     for event in calendar.events:
-        if event.begin < start_date or event.end > end_date:
+        event_start = event.begin.datetime
+        event_end = event.end.datetime if event.end else None
+        
+        if event_start < start_date or (event_end and event_end > end_date):
             continue  # Skip events outside the specified range
         
-        dates_from.append(event.begin.format("DD. MM. YYYY"))
-        times.append(event.begin.format("HH:mm"))
+        dates_from.append(event_start.strftime("%d. %m. %Y"))
+        times.append(event_start.strftime("%H:%M"))
         events.append(event.name)
         
-        if event.end:
-            dates_to.append(event.end.format("DD. MM. YYYY"))
+        if event_end:
+            dates_to.append(event_end.strftime("%d. %m. %Y"))
         else:
             dates_to.append("N/A")  # If no end date, show "N/A"
 
