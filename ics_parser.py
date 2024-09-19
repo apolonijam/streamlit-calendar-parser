@@ -7,6 +7,12 @@ import base64
 from io import BytesIO
 from docx import Document
 
+# Password for the app
+PASSWORD = "hlwstpeter25"
+
+# Default ICS link
+DEFAULT_ICS_URL = "https://outlook.office365.com/owa/calendar/1cd1c906443845f3b6f75a99e0046625@hlw-stpeter.at/eb0bfd4af91541c186aca61ab066659016968059287048739671/calendar.ics"
+
 def fetch_ics_data(ics_url):
     try:
         response = requests.get(ics_url)
@@ -87,7 +93,20 @@ def get_table_download_link(df, file_type):
 def main():
     st.title("ICS-Kalenderparser")
     
-    ics_url = st.text_input("Geben Sie den ICS-Kalenderlink ein:")
+    # Password authentication
+    if 'authenticated' not in st.session_state or not st.session_state.authenticated:
+        st.subheader("Bitte anmelden")
+        password = st.text_input("Passwort", type="password")
+        
+        if password:
+            if password == PASSWORD:
+                st.session_state.authenticated = True
+            else:
+                st.error("Falsches Passwort")
+        return
+
+    # Main content of the app
+    ics_url = st.text_input("Geben Sie den ICS-Kalenderlink ein:", DEFAULT_ICS_URL)
     
     # Default date range
     current_year = datetime.now().year
