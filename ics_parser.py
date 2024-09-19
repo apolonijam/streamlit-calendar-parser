@@ -2,8 +2,9 @@ import streamlit as st
 from ics import Calendar
 import requests
 import pandas as pd
-from datetime import datetime, timezone
+from datetime import datetime
 import base64
+from io import BytesIO
 
 def fetch_ics_data(ics_url):
     try:
@@ -47,13 +48,23 @@ def display_table(dates_from, dates_to, times, events):
     df = pd.DataFrame(table)
     st.dataframe(df)
     
-    # Add button to copy table to clipboard
-    st.markdown(get_table_download_link(df), unsafe_allow_html=True)
+    # Add button to download table as CSV
+    st.markdown(get_table_download_link(df, 'csv'), unsafe_allow_html=True)
+    
+    # Add button to download table as Excel
+    st.markdown(get_table_download_link(df, 'xlsx'), unsafe_allow_html=True)
 
-def get_table_download_link(df):
-    csv = df.to_csv(index=False)
-    b64 = base64.b64encode(csv.encode()).decode()  # Convert to base64
-    return f'<a href="data:file/csv;base64,{b64}" download="calendar_events.csv">Download CSV</a>'
+def get_table_download_link(df, file_type):
+    if file_type == 'csv':
+        csv = df.to_csv(index=False)
+        b64 = base64.b64encode(csv.encode()).decode()  # Convert to base64
+        return f'<a href="data:file/csv;base64,{b64}" download="calendar_events.csv">Download CSV</a>'
+    elif file_type == 'xlsx':
+        output = BytesIO()
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            df.to_excel(writer, index=False, sheet_name='Events')
+        b64 = base64.b64encode(output.getvalue()).decode()  # Convert to base64
+        return f'<a href="data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,{b64}" download="calendar_events.xlsx">Download Excel</a>'
 
 def main():
     st.title("ICS Calendar Parser")
