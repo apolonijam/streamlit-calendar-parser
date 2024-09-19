@@ -5,6 +5,8 @@ import pandas as pd
 from datetime import datetime
 import base64
 from io import BytesIO
+from docx import Document
+from docx.oxml import OxmlElement
 
 def fetch_ics_data(ics_url):
     try:
@@ -53,6 +55,9 @@ def display_table(dates_from, dates_to, times, events):
     
     # Add button to download table as Excel
     st.markdown(get_table_download_link(df, 'xlsx'), unsafe_allow_html=True)
+    
+    # Add button to download table as Word
+    st.markdown(get_table_download_link(df, 'docx'), unsafe_allow_html=True)
 
 def get_table_download_link(df, file_type):
     if file_type == 'csv':
@@ -65,6 +70,37 @@ def get_table_download_link(df, file_type):
             df.to_excel(writer, index=False, sheet_name='Events')
         b64 = base64.b64encode(output.getvalue()).decode()  # Convert to base64
         return f'<a href="data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,{b64}" download="calendar_events.xlsx">Download Excel</a>'
+    elif file_type == 'docx':
+        doc = Document()
+        table = doc.add_table(rows=1, cols=len(df.columns))
+        
+        # Add header row
+        hdr_cells = table.rows[0].cells
+        for i, column_name in enumerate(df.columns):
+            hdr_cells[i].text = column_name
+        
+        # Add data rows
+        for index, row in df.iterrows():
+            row_cells = table.add_row().cells
+            for i, value in enumerate(row):
+                row_cells[i].text = str(value)
+        
+        # Apply table border styles
+        tbl = table._tbl
+        tblPr = tbl.tblPr
+        tblBorders = tblPr.tblBorders
+        if tblBorders is None:
+            tblBorders = OxmlElement('w:tblBorders')
+            tblPr.append(tblBorders)
+        border = OxmlElement('w:bottom')
+        border.set(qn('w:val'), 'single')
+        border.set(qn('w:sz'), '4')  # 1px border size in half-points (4 half-points = 2px)
+        tblBorders.append(border)
+        
+        output = BytesIO()
+        doc.save(output)
+        b64 = base64.b64encode(output.getvalue()).decode()  # Convert to base64
+        return f'<a href="data:application/vnd.openxmlformats-officedocument.wordprocessingml.document;base64,{b64}" download="calendar_events.docx">Download Word</a>'
 
 def main():
     st.title("ICS Calendar Parser")
