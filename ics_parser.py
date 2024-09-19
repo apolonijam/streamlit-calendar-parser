@@ -13,7 +13,7 @@ def fetch_ics_data(ics_url):
         response.raise_for_status()  # Check if the request was successful
         return response.text
     except requests.exceptions.RequestException as e:
-        st.error(f"Error fetching the ICS file: {e}")
+        st.error(f"Fehler beim Abrufen der ICS-Datei: {e}")
         return None
 
 def parse_ics_data(calendar_data, start_date, end_date):
@@ -46,7 +46,7 @@ def parse_ics_data(calendar_data, start_date, end_date):
     return dates_from, dates_to, times, events
 
 def display_table(dates_from, dates_to, times, events):
-    table = {'Start Date': dates_from, 'End Date': dates_to, 'Time': times, 'Event Name': events}
+    table = {'Startdatum': dates_from, 'Enddatum': dates_to, 'Uhrzeit': times, 'Ereignis': events}
     df = pd.DataFrame(table)
     st.dataframe(df)
     
@@ -59,16 +59,16 @@ def get_table_download_link(df, file_type):
     if file_type == 'csv':
         csv = df.to_csv(index=False)
         b64 = base64.b64encode(csv.encode()).decode()  # Convert to base64
-        return f'<a href="data:file/csv;base64,{b64}" download="calendar_events.csv">Download CSV</a>'
+        return f'<a href="data:file/csv;base64,{b64}" download="kalender_ereignisse.csv">CSV herunterladen</a>'
     elif file_type == 'xlsx':
         output = BytesIO()
         with pd.ExcelWriter(output, engine='openpyxl') as writer:
-            df.to_excel(writer, index=False, sheet_name='Events')
+            df.to_excel(writer, index=False, sheet_name='Ereignisse')
         b64 = base64.b64encode(output.getvalue()).decode()  # Convert to base64
-        return f'<a href="data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,{b64}" download="calendar_events.xlsx">Download Excel</a>'
+        return f'<a href="data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,{b64}" download="kalender_ereignisse.xlsx">Excel herunterladen</a>'
     elif file_type == 'docx':
         doc = Document()
-        doc.add_heading('Calendar Events', 0)
+        doc.add_heading('Kalenderereignisse', 0)
         table = doc.add_table(rows=1, cols=len(df.columns))
         hdr_cells = table.rows[0].cells
         for i, column_name in enumerate(df.columns):
@@ -82,12 +82,12 @@ def get_table_download_link(df, file_type):
         output = BytesIO()
         doc.save(output)
         b64 = base64.b64encode(output.getvalue()).decode()  # Convert to base64
-        return f'<a href="data:application/vnd.openxmlformats-officedocument.wordprocessingml.document;base64,{b64}" download="calendar_events.docx">Download Word</a>'
+        return f'<a href="data:application/vnd.openxmlformats-officedocument.wordprocessingml.document;base64,{b64}" download="kalender_ereignisse.docx">Word herunterladen</a>'
 
 def main():
-    st.title("ICS Calendar Parser")
+    st.title("ICS-Kalenderparser")
     
-    ics_url = st.text_input("Enter the ICS calendar link:")
+    ics_url = st.text_input("Geben Sie den ICS-Kalenderlink ein:")
     
     # Default date range
     current_year = datetime.now().year
@@ -95,9 +95,9 @@ def main():
     end_date = datetime(current_year + 1, 9, 1)
     
     # User inputs for date range
-    st.sidebar.header("Filter Date Range")
-    start_date = st.sidebar.date_input("Start Date", start_date)
-    end_date = st.sidebar.date_input("End Date", end_date)
+    st.sidebar.header("Filterdatum")
+    start_date = st.sidebar.date_input("Startdatum", start_date)
+    end_date = st.sidebar.date_input("Enddatum", end_date)
     
     # Convert to datetime objects
     start_date = datetime.combine(start_date, datetime.min.time())
