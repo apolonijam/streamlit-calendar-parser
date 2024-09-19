@@ -2,4 +2,5 @@ streamlit
 ics
 pandas
 requests
-openpyxl==3.1.2
+openpyxl
+python-docx
