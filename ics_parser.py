@@ -2,7 +2,7 @@ import streamlit as st
 from ics import Calendar
 import requests
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, timezone
 import base64
 
 def fetch_ics_data(ics_url):
@@ -21,6 +21,12 @@ def parse_ics_data(calendar_data, start_date, end_date):
     for event in calendar.events:
         event_start = event.begin.datetime
         event_end = event.end.datetime if event.end else None
+
+        # Make event_start and event_end naive if they are timezone-aware
+        if event_start.tzinfo is not None:
+            event_start = event_start.replace(tzinfo=None)
+        if event_end and event_end.tzinfo is not None:
+            event_end = event_end.replace(tzinfo=None)
         
         if event_start < start_date or (event_end and event_end > end_date):
             continue  # Skip events outside the specified range
