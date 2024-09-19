@@ -6,8 +6,6 @@ from datetime import datetime
 import base64
 from io import BytesIO
 from docx import Document
-from docx.oxml import OxmlElement
-from docx.oxml.ns import qn
 
 def fetch_ics_data(ics_url):
     try:
@@ -51,13 +49,9 @@ def display_table(dates_from, dates_to, times, events):
     df = pd.DataFrame(table)
     st.dataframe(df)
     
-    # Add button to download table as CSV
+    # Add buttons to download the table in different formats
     st.markdown(get_table_download_link(df, 'csv'), unsafe_allow_html=True)
-    
-    # Add button to download table as Excel
     st.markdown(get_table_download_link(df, 'xlsx'), unsafe_allow_html=True)
-    
-    # Add button to download table as Word
     st.markdown(get_table_download_link(df, 'docx'), unsafe_allow_html=True)
 
 def get_table_download_link(df, file_type):
@@ -73,34 +67,17 @@ def get_table_download_link(df, file_type):
         return f'<a href="data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,{b64}" download="calendar_events.xlsx">Download Excel</a>'
     elif file_type == 'docx':
         doc = Document()
+        doc.add_heading('Calendar Events', 0)
         table = doc.add_table(rows=1, cols=len(df.columns))
-        
-        # Add header row
         hdr_cells = table.rows[0].cells
         for i, column_name in enumerate(df.columns):
             hdr_cells[i].text = column_name
-        
-        # Add data rows
+
         for index, row in df.iterrows():
             row_cells = table.add_row().cells
             for i, value in enumerate(row):
                 row_cells[i].text = str(value)
-        
-        # Apply table border styles
-        tbl = table._tbl
-        tblPr = tbl.tblPr
-        tblBorders = tblPr.tblBorders
-        if tblBorders is None:
-            tblBorders = OxmlElement('w:tblBorders')
-            tblPr.append(tblBorders)
-        
-        # Define border properties
-        for border_name in ['top', 'left', 'bottom', 'right', 'insideH', 'insideV']:
-            border = OxmlElement(f'w:{border_name}')
-            border.set(qn('w:val'), 'single')
-            border.set(qn('w:sz'), '4')  # 1px border size in half-points (4 half-points = 2px)
-            tblBorders.append(border)
-        
+
         output = BytesIO()
         doc.save(output)
         b64 = base64.b64encode(output.getvalue()).decode()  # Convert to base64
