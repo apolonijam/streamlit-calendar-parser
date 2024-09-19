@@ -8,7 +8,7 @@ from io import BytesIO
 from docx import Document
 
 # Password for the app
-PASSWORD = "your_password_here"
+PASSWORD = "hlwstpeter25"
 
 # Default ICS link
 DEFAULT_ICS_URL = "https://outlook.office365.com/owa/calendar/1cd1c906443845f3b6f75a99e0046625@hlw-stpeter.at/eb0bfd4af91541c186aca61ab066659016968059287048739671/calendar.ics"
