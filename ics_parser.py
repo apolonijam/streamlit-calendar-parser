@@ -2,7 +2,7 @@ import streamlit as st
 from ics import Calendar
 import requests
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, timedelta
 import base64
 from io import BytesIO
 from docx import Document
@@ -32,15 +32,16 @@ def parse_ics_data(calendar_data, start_date, end_date):
         
         if event_start < start_date or (event_end and event_end > end_date):
             continue  # Skip events outside the specified range
+
+        # Determine if the end date should be shown
+        if event_end and (event_end - event_start) > timedelta(days=1):
+            dates_to.append(event_end.strftime("%d. %m. %Y"))
+        else:
+            dates_to.append("")  # Leave it empty if the duration is 1 day or less
         
         dates_from.append(event_start.strftime("%d. %m. %Y"))
         times.append(event_start.strftime("%H:%M"))
         events.append(event.name)
-        
-        if event_end:
-            dates_to.append(event_end.strftime("%d. %m. %Y"))
-        else:
-            dates_to.append("N/A")  # If no end date, show "N/A"
 
     return dates_from, dates_to, times, events
 
