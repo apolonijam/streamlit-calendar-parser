@@ -71,9 +71,19 @@ def main():
     
     ics_url = st.text_input("Enter the ICS calendar link:")
     
-    # Define the date range for filtering events
-    start_date = datetime(2024, 9, 1)
-    end_date = datetime(2025, 9, 1)
+    # Default date range
+    current_year = datetime.now().year
+    start_date = datetime(current_year, 9, 1)
+    end_date = datetime(current_year + 1, 9, 1)
+    
+    # User inputs for date range
+    st.sidebar.header("Filter Date Range")
+    start_date = st.sidebar.date_input("Start Date", start_date)
+    end_date = st.sidebar.date_input("End Date", end_date)
+    
+    # Convert to datetime objects
+    start_date = datetime.combine(start_date, datetime.min.time())
+    end_date = datetime.combine(end_date, datetime.min.time())
     
     if ics_url:
         calendar_data = fetch_ics_data(ics_url)
