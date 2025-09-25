@@ -11,7 +11,7 @@ from docx import Document
 PASSWORD = "hlwstpeter25"
 
 # Default ICS link
-DEFAULT_ICS_URL = "https://outlook.office365.com/owa/calendar/1cd1c906443845f3b6f75a99e0046625@hlw-stpeter.at/eb0bfd4af91541c186aca61ab066659016968059287048739671/calendar.ics"
+DEFAULT_ICS_URL = "https://outlook.office365.com/owa/calendar/c6dc4ebc549243a6a767b389108fbe72@hlw-stpeter.at/d580cf3c6d794aef984aea99ff90ec6914248732235266594524/calendar.ics"
 
 def fetch_ics_data(ics_url):
     try:
